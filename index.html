@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Buget</title>
+<meta name="theme-color" content="#0b1f4b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Buget">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700&family=Red+Hat+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm, exact, a money tool you open daily — newspaper-graphics clarity.
+   IDEA: a monthly statement card: the month's balance printed big on a dark band.
+   PICTURE: savings-rate ring in magenta beside the remaining balance; the working list right under it.
+   COLOUR and TYPE: oxford blue band, white panels, magenta for the result; Red Hat Display + Red Hat Text.
+   LAYOUT: band with month nav + figures, sticky tabs, one column of panels, floating add button. */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#070f26);--ink:light-dark(#0b1630,#e8ecf6);--mut:light-dark(#5b6683,#9aa6c4);--pan:light-dark(#ffffff,#0d1a3a);--line:light-dark(#e2e6ef,#1d2c54);--soft:light-dark(#f4f6fb,#0a1531);--band:#0b1f4b;--mag:light-dark(#e0115f,#ff4d8a);--inc:light-dark(#2b59c3,#86a8ff)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Red Hat Text",system-ui,sans-serif;overflow-x:clip}
+h1,h2,.big{font-family:"Red Hat Display",system-ui,sans-serif;font-weight:700;line-height:1.05;margin:0}
+h2{font-size:20px;margin:0 0 12px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--mag);outline-offset:2px}
+.band{background:var(--band);color:#fff;padding:calc(20px + env(safe-area-inset-top)) max(5vw,16px) 26px}
+.wrap{max-width:860px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top h1{font-size:22px}
+.mnav{display:flex;align-items:center;gap:4px}
+.mnav button{width:44px;height:44px;border-radius:22px;border:1px solid #ffffff33;background:transparent;color:#fff;font-size:20px}
+.mnav span{min-width:9.5em;text-align:center;font-weight:600}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;margin-top:22px}
+.lbl{font-size:14px;color:#c5cfe8}
+.big{font-size:clamp(36px,8vw,52px);white-space:nowrap;margin-top:4px}
+.big.neg{color:#ff7aa6}
+.ring{position:relative;width:132px;height:132px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring div{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring b{font:700 26px "Red Hat Display",sans-serif}.ring small{font-size:13px;color:#c5cfe8}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:20px}
+.stats div{border-top:1px solid #ffffff2e;padding-top:8px}
+.stats b{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabs .wrap{display:flex;overflow-x:auto;padding:0 max(5vw,16px)}
+.tabs a{flex:none;padding:13px 14px;color:var(--mut);text-decoration:none;font-weight:600;border-bottom:3px solid transparent}
+.tabs a.on{color:var(--ink);border-color:var(--mag)}
+main{padding:18px max(5vw,16px) 110px}
+.pan{background:var(--pan);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:12px}
+.grow{flex:1}
+.mut{color:var(--mut);font-size:14px}
+.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+.pos{color:var(--inc)}
+.dot{width:12px;height:12px;border-radius:6px;flex:none}
+.day{font-size:13px;font-weight:600;color:var(--mut);margin:16px 0 4px;display:flex;justify-content:space-between}
+.tx{display:flex;align-items:center;gap:12px;width:100%;padding:10px 4px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;min-height:56px}
+.tx:last-child{border-bottom:0}
+.tx .ic{width:38px;height:38px;border-radius:12px;display:grid;place-content:center;font-weight:700;color:#fff;flex:none}
+.tx .t{flex:1;overflow:hidden}.tx .t div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+input,select,textarea{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px;min-height:44px;width:100%}
+.btn{min-height:44px;padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--pan);font-weight:600}
+.btn.pri{background:var(--mag);border-color:var(--mag);color:#fff}
+.btn.ghost{background:none}
+.btn.dan{color:var(--mag)}
+.bar{height:10px;border-radius:5px;background:var(--soft);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;border-radius:5px}
+.bud{padding:12px 0;border-bottom:1px solid var(--line)}.bud:last-child{border:0}
+.bud input{width:120px;min-height:40px;text-align:right}
+.donut{display:grid;grid-template-columns:180px minmax(0,1fr);gap:20px;align-items:center}
+.donut .ring{width:180px;height:180px}.donut .ring b{font-size:20px}.donut .ring small{color:var(--mut)}
+.leg div{display:flex;gap:10px;align-items:center;padding:6px 0;font-size:15px}
+.cols{display:flex;align-items:flex-end;gap:10px;height:180px;margin-top:8px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%}
+.col .bs{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px}
+.col .bs i{width:42%;max-width:22px;border-radius:4px 4px 0 0;min-height:2px}
+.col span{font-size:13px;color:var(--mut);margin-top:6px}
+.key{display:flex;gap:16px;font-size:14px;color:var(--mut)}.key span{display:flex;align-items:center;gap:6px}
+.acc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.acc input:first-child{flex:1 1 150px}.acc input.num{flex:0 0 120px}.acc select{flex:1 0 110px;width:auto}
+.acc button{flex:0 0 44px;border:0;background:none;color:var(--mut);font-size:20px}
+.nw{font-size:clamp(30px,7vw,44px)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:40px;padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--soft);font-size:15px}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
+.seg button{min-height:42px;border:0;border-radius:9px;background:none;font-weight:600;color:var(--mut)}
+.seg button.on{background:var(--pan);color:var(--ink);box-shadow:0 1px 3px #0002}
+.empty{text-align:center;padding:30px 10px;color:var(--mut)}
+.fab{position:fixed;right:max(5vw,16px);bottom:calc(22px + env(safe-area-inset-bottom));z-index:8;height:58px;padding:0 24px;border-radius:29px;border:0;background:var(--mag);color:#fff;font-weight:700;font-size:17px;box-shadow:0 8px 24px #e0115f55}
+.ov{position:fixed;inset:0;background:#030818aa;z-index:20;display:none;align-items:flex-end;justify-content:center}
+.ov.show{display:flex}
+.sheet{background:var(--pan);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px 18px 24px;max-height:92vh;overflow:auto;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.sheet{animation:none}}
+.amt{font:700 34px "Red Hat Display",sans-serif;text-align:center;background:none;border:0;border-bottom:2px solid var(--line);border-radius:0}
+.f{margin-top:14px}.f>label{display:block;font-size:14px;color:var(--mut);margin-bottom:6px}
+.toast{position:fixed;left:50%;bottom:94px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:30;display:none;gap:14px;align-items:center;max-width:92vw}
+.toast.show{display:flex}.toast button{background:none;border:0;color:var(--mag);font-weight:700;min-height:36px}
+.note{font-size:13px;color:var(--mut)}
+.pf{display:flex;gap:6px;margin-top:16px;overflow-x:auto;padding-bottom:2px}
+.pf button{flex:none;min-height:40px;padding:6px 15px;border-radius:20px;border:1px solid #ffffff45;background:transparent;color:#fff;font-weight:600}
+.pf button.on{background:#fff;color:#0b1f4b;border-color:#fff}
+.who{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:8px;background:var(--soft);color:var(--mut);margin-left:6px;vertical-align:1px}
+.seg.s3{grid-template-columns:1fr 1fr 1fr}
+.split .row{padding:6px 0}.split .bar{margin-top:4px}
+@media(max-width:600px){.pf button{padding:6px 12px}.hero{grid-template-columns:minmax(0,1fr) 104px}.ring{width:104px;height:104px}.ring b{font-size:21px}.donut{grid-template-columns:1fr;justify-items:center}.donut .leg{width:100%}.stats b{font-size:16px}}
+</style>
+</head>
+<body>
+<header class="band"><div class="wrap">
+  <div class="top"><h1>Buget</h1>
+    <div class="mnav"><button id="prev" aria-label="Luna anterioară">‹</button><span id="mlabel"></span><button id="next" aria-label="Luna următoare">›</button></div></div>
+  <div class="pf" id="pf" role="group" aria-label="Al cui"></div>
+  <div class="hero">
+    <div><div class="lbl" id="remLbl">Rămas luna aceasta</div><div class="big" id="rem">0</div></div>
+    <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#ffffff22" stroke-width="12"/><circle id="ringArc" cx="60" cy="60" r="50" fill="none" stroke="#ff3d7f" stroke-width="12" stroke-linecap="round" stroke-dasharray="0 400"/></svg><div><b id="rate">0%</b><small>economisit</small></div></div>
+  </div>
+  <div class="stats">
+    <div><span class="lbl">Venituri</span><b id="sInc">0</b></div>
+    <div><span class="lbl">Cheltuieli</span><b id="sExp">0</b></div>
+    <div><span class="lbl">Avere netă</span><b id="sNw">0</b></div>
+  </div>
+</div></header>
+<nav class="tabs"><div class="wrap">
+  <a href="#tranzactii" data-v="tranzactii">Tranzacții</a><a href="#bugete" data-v="bugete">Bugete</a><a href="#statistici" data-v="statistici">Statistici</a><a href="#avere" data-v="avere">Avere</a><a href="#setari" data-v="setari">Setări</a>
+</div></nav>
+<main><div class="wrap" id="view"></div></main>
+<button class="fab" id="fab">+ Adaugă</button>
+
+<div class="ov" id="ov"><form class="sheet" id="form" autocomplete="off">
+  <div class="row"><h2 class="grow" id="fTitle">Tranzacție nouă</h2><button type="button" class="btn ghost" id="fClose">Închide</button></div>
+  <div class="seg" id="fType"><button type="button" data-t="e">Cheltuială</button><button type="button" data-t="i">Venit</button></div>
+  <div class="f"><label>Al cui</label><div class="seg s3" id="fWho"></div></div>
+  <div class="f"><input class="amt" id="fAmt" inputmode="decimal" placeholder="0,00" aria-label="Sumă"></div>
+  <div class="f"><label>Categorie</label><div class="chips" id="fCats"></div></div>
+  <div class="f"><label for="fDate">Data</label><input type="date" id="fDate"></div>
+  <div class="f"><label for="fNote">Notă</label><input id="fNote" placeholder="ex. cumpărături Kaufland"></div>
+  <div class="row f"><button type="button" class="btn dan" id="fDel">Șterge</button><span class="grow"></span><button class="btn pri" id="fSave">Salvează</button></div>
+  <p class="note" id="fErr"></p>
+</form></div>
+<div class="toast" id="toast"><span id="tMsg"></span><button id="tUndo">Anulează</button></div>
+
+<script>
+{
+const OLD='buget-v1',KEY='buget-cuplu-v1',MEK='buget-eu';
+const COLS=['#e0115f','#2b59c3','#f08a24','#14a38b','#8a4fd8','#d6336c','#0f8fd6','#b38b00','#5b6683','#c2410c','#0d9488','#7c3aed'];
+const defCats=()=>({e:[['mancare','Mâncare'],['transport','Transport'],['locuinta','Locuință'],['facturi','Facturi'],['cumparaturi','Cumpărături'],['sanatate','Sănătate'],['distractie','Distracție'],['educatie','Educație'],['alte-e','Altele']].map(([id,name],k)=>({id,name,col:COLS[k]})),
+  i:[['salariu','Salariu'],['bonus','Bonus'],['freelance','Freelance'],['cadouri','Cadouri'],['alte-i','Altele']].map(([id,name],k)=>({id,name,col:COLS[(k+1)%COLS.length]}))});
+const blankCfg=()=>({cur:'RON',cats:defCats(),bud:{},acc:[],names:{a:'Eu',b:'Partener'},who:{},upd:0});
+const normCfg=o=>{const s=Object.assign(blankCfg(),o||{});delete s.tx;delete s.v;if(!Array.isArray(s.acc))s.acc=[];if(!s.cats||!s.cats.e||!s.cats.i)s.cats=defCats();if(!s.bud)s.bud={};s.names=Object.assign({a:'Eu',b:'Partener'},s.names||{});if(!s.who)s.who={};s.acc.forEach(a=>{if(!a.p)a.p='a'});return s};
+const fix=t=>{t.m=t.d.slice(0,7);if(!t.p)t.p='a';return t};
+const clean=t=>{const o={t:t.t,a:t.a,c:t.c,d:t.d,m:t.d.slice(0,7),n:t.n||'',p:t.p,ts:t.ts||Date.now()};if(t.ex)o.ex=1;return o};
+let C=blankCfg();const TX=new Map();
+let me='a';try{me=localStorage.getItem(MEK)||'a'}catch(e){}
+try{const r=localStorage.getItem(KEY);
+  if(r){const o=JSON.parse(r);C=normCfg(o.cfg);(o.tx||[]).forEach(t=>TX.set(t.id,fix(t)))}
+  else{const old=localStorage.getItem(OLD);if(old){const o=JSON.parse(old);C=normCfg(o);(o.tx||[]).forEach(t=>TX.set(t.id,fix(Object.assign({p:'a'},t))))}}
+}catch(e){}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+let M=today().slice(0,7),PF='all';
+const fmt=n=>{try{return new Intl.NumberFormat('ro-RO',{style:'currency',currency:C.cur,maximumFractionDigits:2}).format(n)}catch(e){return n.toFixed(2)+' '+C.cur}};
+const fmt0=n=>{try{return new Intl.NumberFormat('ro-RO',{style:'currency',currency:C.cur,maximumFractionDigits:0}).format(n)}catch(e){return Math.round(n)+' '+C.cur}};
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const mName=(m,short)=>{const [y,mo]=m.split('-').map(Number);return cap(new Intl.DateTimeFormat('ro-RO',short?{month:'short'}:{month:'long',year:'numeric'}).format(new Date(y,mo-1,1)))};
+const shift=(m,k)=>{const [y,mo]=m.split('-').map(Number);const d=new Date(y,mo-1+k,1);return d.getFullYear()+'-'+pad(d.getMonth()+1)};
+const cat=(t,id)=>C.cats[t].find(c=>c.id===id)||{id,name:'Altele',col:'#5b6683'};
+const parseNum=v=>{const n=parseFloat(String(v).replace(/\s/g,'').replace(',','.'));return isFinite(n)?n:NaN};
+const sum=a=>a.reduce((s,x)=>s+x,0);
+const PS=['a','b','c'];
+const pn=p=>p==='c'?'Comun':(C.names[p]||'?');
+const inPF=x=>PF==='all'||x.p===PF;
+const monthTx=(m,all)=>[...TX.values()].filter(t=>t.m===m&&(all||inPF(t)));
+const totals=m=>{const x=monthTx(m);return{inc:sum(x.filter(t=>t.t==='i').map(t=>t.a)),exp:sum(x.filter(t=>t.t==='e').map(t=>t.a))}};
+const accs=()=>C.acc.filter(inPF);
+const netWorth=()=>sum(accs().map(a=>a.kind==='d'?-a.val:a.val));
+
+/* ---- persistence: this phone, plus optional Firebase sync for the couple ---- */
+const SYK='buget-sync';
+let db=null,txUnsub=null,winKey='',cfgT=0,cfgDirty=false,cfgWriting=false,cfgAgain=false,sync='Datele sunt doar pe acest telefon',inviteUrl='';
+const getSync=()=>{try{return JSON.parse(localStorage.getItem(SYK)||'null')}catch(e){return null}};
+const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d=s=>JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')))));
+const mkInvite=s=>location.origin+location.pathname+'?casa='+b64e({c:s.cfg,h:s.h});
+const txRef=id=>db.collection('tx').doc(id);
+const cfgRef=()=>db.doc('meta/settings');
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(db?{cfg:C,tx:[]}:{cfg:C,tx:[...TX.values()]}))}catch(e){}}
+function fail(e){const c=e&&e.code;sync=c==='permission-denied'?'Firebase refuză datele: verifică regulile Firestore (pasul 3 din instrucțiuni)':c==='resource-exhausted'?'Limita gratuită Firebase de azi e atinsă: reîncearcă mâine':'Nu s-a putut salva: verifică internetul';render()}
+async function putTx(t){fix(t);TX.set(t.id,t);render();if(db){try{await txRef(t.id).set(clean(t))}catch(e){fail(e)}}else saveLocal()}
+async function delTx(id){TX.delete(id);render();if(db){try{await txRef(id).delete()}catch(e){fail(e)}}else saveLocal()}
+function saveCfg(){C.upd=Date.now();saveLocal();render();if(!db)return;cfgDirty=true;clearTimeout(cfgT);cfgT=setTimeout(writeCfg,600)}
+async function writeCfg(){cfgDirty=false;if(cfgWriting){cfgAgain=true;return}cfgWriting=true;
+  try{await cfgRef().set({json:JSON.stringify(C),upd:C.upd})}catch(e){fail(e)}
+  cfgWriting=false;if(cfgAgain){cfgAgain=false;writeCfg()}}
+const win=()=>[...Array(6)].map((_,k)=>shift(M,k-5));
+function subTx(){if(!db)return;const w=win(),k=w.join();if(k===winKey)return;winKey=k;if(txUnsub)txUnsub();
+  const tm=setTimeout(()=>{sync='Nu ajung la Firebase acum: verifică internetul';render()},10000);
+  txUnsub=db.collection('tx').where('m','in',w).onSnapshot(s=>{clearTimeout(tm);
+    sync=s.metadata.fromCache?'Fără internet: modificările se trimit când revine conexiunea':'Sincronizat cu telefonul partenerului';
+    for(const [id,t] of TX)if(w.includes(t.m))TX.delete(id);
+    s.docs.forEach(d=>{const v=d.data();if(v)TX.set(d.id,fix(Object.assign({},v,{id:d.id})))});render()},
+  e=>{clearTimeout(tm);fail(e)})}
+async function allTx(){if(!db)return[...TX.values()];const s=await db.collection('tx').orderBy('d','desc').limit(1000).get();return s.docs.map(d=>fix(Object.assign({},d.data(),{id:d.id})))}
+/* a tiny facade over the Firebase SDK, rooted at households/<code> */
+function wrap(F,fs,H){const B=['households',H];
+  const sd=s=>({id:s.id,exists:s.exists(),data:()=>s.data(),metadata:s.metadata});
+  const dref=parts=>{const r=F.doc(fs,...B,...parts);return{set:d=>F.setDoc(r,d),delete:()=>F.deleteDoc(r),get:async()=>sd(await F.getDoc(r)),onSnapshot:(n,e)=>F.onSnapshot(r,{includeMetadataChanges:true},s=>n(sd(s)),e)}};
+  const qw=(name,cons)=>{const col=F.collection(fs,...B,name);return{where:(f,o,v)=>qw(name,[...cons,F.where(f,o,v)]),orderBy:(f,d)=>qw(name,[...cons,F.orderBy(f,d)]),limit:n=>qw(name,[...cons,F.limit(n)]),
+    get:async()=>{const s=await F.getDocs(F.query(col,...cons));return{docs:s.docs.map(sd)}},
+    onSnapshot:(n,e)=>F.onSnapshot(F.query(col,...cons),{includeMetadataChanges:true},s=>n({docs:s.docs.map(sd),metadata:s.metadata}),e),
+    doc:id=>dref([name,id])}};
+  return{doc:p=>dref(p.split('/')),collection:n=>qw(n,[])}}
+const FV='10.12.2';
+async function initSync(upload){const s=getSync();if(!s)return;
+  try{const [A,F]=await Promise.all([import(`https://www.gstatic.com/firebasejs/${FV}/firebase-app.js`),import(`https://www.gstatic.com/firebasejs/${FV}/firebase-firestore.js`)]);
+    const app=A.getApps().length?A.getApp():A.initializeApp(s.cfg);
+    let fs;try{fs=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentMultipleTabManager()})})}catch(e){fs=F.getFirestore(app)}
+    const localTx=[...TX.values()].filter(t=>!t.ex);
+    db=wrap(F,fs,s.h);inviteUrl=mkInvite(s);
+    if(upload){C.upd=Date.now();await writeCfg();for(const t of localTx)await txRef(t.id).set(clean(t))}
+    TX.clear();saveLocal();
+    cfgRef().onSnapshot(x=>{if(x.exists&&!cfgDirty&&!cfgWriting){try{C=normCfg(JSON.parse(x.data().json));saveLocal();render()}catch(e){}}},fail);
+    sync='Se conectează…';winKey='';subTx();render();
+  }catch(e){db=null;sync='Sincronizarea nu a pornit: verifică internetul sau codul Firebase';render()}}
+function parseCfg(txt){const o={};for(const k of ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId']){const m=new RegExp(k+'["\']?\\s*:\\s*["\']([^"\']+)["\']').exec(txt);if(m)o[k]=m[1]}return o.apiKey&&o.projectId&&o.appId?o:null}
+function code(){const a=new Uint8Array(18);crypto.getRandomValues(a);return [...a].map(x=>x.toString(36).padStart(2,'0')).join('').slice(0,28)}
+/* joining by the partner's invite link */
+try{const p=new URLSearchParams(location.search).get('casa');if(p){const o=b64d(p);if(o&&o.c&&o.h){localStorage.setItem(SYK,JSON.stringify({cfg:o.c,h:o.h}));if(!localStorage.getItem(MEK)){me='b';localStorage.setItem(MEK,'b')}}history.replaceState(null,'',location.pathname+location.hash)}}catch(e){}
+
+/* ---- header ---- */
+function header(){const {inc,exp}=totals(M);const rem=inc-exp;const cur=M===today().slice(0,7);
+  $('pf').innerHTML=[['all','Împreună'],...PS.map(p=>[p,pn(p)])].map(([k,l])=>`<button class="${PF===k?'on':''}" data-pf="${k}">${esc(l)}</button>`).join('');
+  $('mlabel').textContent=mName(M);
+  $('remLbl').textContent=(cur?'Rămas luna aceasta':'Rămas în '+mName(M).toLowerCase())+(PF==='all'?'':' · '+pn(PF));
+  $('rem').textContent=fmt(rem);$('rem').classList.toggle('neg',rem<0);
+  const rate=inc>0?Math.max(-1,Math.min(1,rem/inc)):0;
+  $('rate').textContent=inc>0?Math.round(rate*100)+'%':'—';
+  const L=2*Math.PI*50;$('ringArc').setAttribute('stroke-dasharray',(Math.max(0,rate)*L)+' '+L);$('ringArc').style.opacity=rate>0?1:0;
+  $('sInc').textContent=fmt0(inc);$('sExp').textContent=fmt0(exp);$('sNw').textContent=fmt0(netWorth());
+}
+$('pf').addEventListener('click',e=>{const b=e.target.closest('[data-pf]');if(b){PF=b.dataset.pf;fCat='';render()}});
+
+/* ---- views ---- */
+let view='tranzactii',q='',fCat='',busy=false;
+const V={};
+function split(){if(PF!=='all')return'';const x=monthTx(M,1).filter(t=>t.t==='e');const tot=sum(x.map(t=>t.a));if(!tot)return'';
+  const by=PS.map(p=>({p,v:sum(x.filter(t=>t.p===p).map(t=>t.a)),i:sum(monthTx(M,1).filter(t=>t.t==='i'&&t.p===p).map(t=>t.a))}));
+  return `<div class="pan split"><h2>Cine cât a cheltuit</h2>${by.map((o,k)=>`<div class="row"><span class="grow"><b>${esc(pn(o.p))}</b>${o.i?` <span class="mut">· venit ${fmt0(o.i)}</span>`:''}</span><span class="mut">${Math.round(o.v/tot*100)}%</span><span class="num">${fmt(o.v)}</span></div><div class="bar"><i style="width:${o.v/tot*100}%;background:${['var(--mag)','var(--inc)','#f08a24'][k]}"></i></div>`).join('')}</div>`}
+V.tranzactii=()=>{
+  let x=monthTx(M).filter(t=>(!fCat||t.c===fCat)&&(!q||(t.n+' '+cat(t.t,t.c).name+' '+pn(t.p)).toLowerCase().includes(q.toLowerCase())));
+  x.sort((a,b)=>b.d.localeCompare(a.d)||(b.ts||0)-(a.ts||0));
+  const used=[...new Set(monthTx(M).map(t=>t.t+':'+t.c))];
+  const days={};x.forEach(t=>(days[t.d]=days[t.d]||[]).push(t));
+  const ex=[...TX.values()].some(t=>t.ex);
+  return split()+`<div class="pan"><input id="q" type="search" placeholder="Caută în ${esc(mName(M).toLowerCase())}…" value="${esc(q)}" aria-label="Caută">
+  ${used.length?`<div class="chips" style="margin-top:10px"><button class="chip ${fCat?'':'on'}" data-fc="">Toate</button>${used.map(k=>{const [t,c]=k.split(':');return `<button class="chip ${fCat===c?'on':''}" data-fc="${esc(c)}">${esc(cat(t,c).name)}</button>`}).join('')}</div>`:''}
+  ${x.length?Object.keys(days).map(d=>{const dd=days[d];const net=sum(dd.map(t=>t.t==='i'?t.a:-t.a));
+    return `<div class="day"><span>${esc(new Intl.DateTimeFormat('ro-RO',{weekday:'long',day:'numeric',month:'long'}).format(new Date(d+'T12:00')))}</span><span class="num">${fmt(net)}</span></div>`+
+    dd.map(t=>{const c=cat(t.t,t.c);return `<button class="tx" data-id="${esc(t.id)}"><span class="ic" style="background:${c.col}">${esc(c.name[0])}</span><span class="t"><div><b>${esc(c.name)}</b>${PF==='all'?`<span class="who">${esc(pn(t.p))}</span>`:''}</div>${t.n?`<div class="mut">${esc(t.n)}</div>`:''}</span><span class="num ${t.t==='i'?'pos':''}">${t.t==='i'?'+':'−'}${fmt(t.a)}</span></button>`}).join('')}).join('')
+  :`<div class="empty">${TX.size?(q||fCat?'Nimic găsit pentru filtrul ales.':'Nicio tranzacție în '+esc(mName(M).toLowerCase())+(PF==='all'?'':' pentru '+esc(pn(PF)))+'.'):'Nicio tranzacție încă. Apasă <b>+ Adaugă</b> pentru prima cheltuială sau venit.<br><br><button class="btn" id="sample">Încearcă cu date de exemplu</button>'}</div>`}
+  </div>${ex?`<p class="note">Vezi și date de exemplu. <button class="btn ghost dan" id="clrSample">Șterge datele de exemplu</button></p>`:''}`};
+V.bugete=()=>{const x=monthTx(M).filter(t=>t.t==='e');
+  const rows=C.cats.e.map(c=>{const sp=sum(x.filter(t=>t.c===c.id).map(t=>t.a));const lim=C.bud[c.id]||0;const p=lim?sp/lim:0;
+    return `<div class="bud"><div class="row"><span class="dot" style="background:${c.col}"></span><span class="grow"><b>${esc(c.name)}</b><div class="mut">${fmt(sp)}${lim?` din ${fmt(lim)} · ${sp>lim?'depășit cu '+fmt(sp-lim):'rămas '+fmt(lim-sp)}`:' · fără limită'}</div></span>
+    <input inputmode="decimal" data-bud="${c.id}" value="${lim||''}" placeholder="Limită" aria-label="Limită ${esc(c.name)}"></div>
+    ${lim?`<div class="bar"><i style="width:${Math.min(100,p*100)}%;background:${p>1?'var(--mag)':p>.85?'#f08a24':c.col}"></i></div>`:''}</div>`}).join('');
+  const tl=sum(Object.values(C.bud).map(Number).filter(n=>n>0)),ts=sum(x.map(t=>t.a));
+  return `<div class="pan"><h2>Bugete pentru ${esc(mName(M).toLowerCase())}${PF==='all'?'':' · '+esc(pn(PF))}</h2>
+  ${tl?`<div class="row"><span class="grow">Total cheltuit din buget</span><span class="num">${fmt(ts)} / ${fmt(tl)}</span></div><div class="bar"><i style="width:${Math.min(100,ts/tl*100)}%;background:${ts>tl?'var(--mag)':'var(--inc)'}"></i></div>`:'<p class="mut">Scrie o limită lunară lângă fiecare categorie. Limitele sunt comune și se aplică în fiecare lună.</p>'}
+  </div><div class="pan">${rows}</div>`};
+V.statistici=()=>{const x=monthTx(M).filter(t=>t.t==='e');const tot=sum(x.map(t=>t.a));
+  const by=C.cats.e.map(c=>({c,v:sum(x.filter(t=>t.c===c.id).map(t=>t.a))})).filter(o=>o.v>0);
+  const other=tot-sum(by.map(o=>o.v));if(other>0.001)by.push({c:{name:'Altele',col:'#5b6683'},v:other});by.sort((a,b)=>b.v-a.v);
+  const L=2*Math.PI*48;let off=0;
+  const arcs=by.map(o=>{const len=o.v/tot*L;const s=`<circle cx="60" cy="60" r="48" fill="none" stroke="${o.c.col}" stroke-width="16" stroke-dasharray="${Math.max(0,len-1.5)} ${L}" stroke-dashoffset="${-off}"/>`;off+=len;return s}).join('');
+  const ms=win();const tt=ms.map(totals);const mx=Math.max(1,...tt.map(t=>Math.max(t.inc,t.exp)));
+  const avg=sum(tt.map(t=>t.exp))/(tt.filter(t=>t.exp>0).length||1);
+  return `<div class="pan"><h2>Unde s-au dus banii în ${esc(mName(M).toLowerCase())}${PF==='all'?'':' · '+esc(pn(PF))}</h2>
+  ${tot?`<div class="donut"><div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="48" fill="none" stroke="var(--soft)" stroke-width="16"/>${arcs}</svg><div><b>${fmt0(tot)}</b><small>cheltuit</small></div></div>
+  <div class="leg">${by.map(o=>`<div><span class="dot" style="background:${o.c.col}"></span><span class="grow">${esc(o.c.name)}</span><span class="mut">${Math.round(o.v/tot*100)}%</span><span class="num">${fmt(o.v)}</span></div>`).join('')}</div></div>`:'<div class="empty">Nicio cheltuială în această lună.</div>'}
+  </div><div class="pan"><h2>Ultimele 6 luni</h2><div class="key"><span><i class="dot" style="background:var(--inc)"></i>Venituri</span><span><i class="dot" style="background:var(--mag)"></i>Cheltuieli</span></div>
+  <div class="cols">${ms.map((m,k)=>`<div class="col" title="${esc(mName(m))}: venit ${fmt(tt[k].inc)}, cheltuit ${fmt(tt[k].exp)}"><div class="bs"><i style="height:${tt[k].inc/mx*100}%;background:var(--inc)"></i><i style="height:${tt[k].exp/mx*100}%;background:var(--mag)"></i></div><span>${esc(mName(m,1).replace('.',''))}</span></div>`).join('')}</div>
+  <p class="mut">Cheltuială medie lunară: <b>${fmt(avg)}</b></p></div>`};
+V.avere=()=>{const sec=(k,t)=>`<div class="pan"><h2>${t}</h2>${accs().filter(a=>a.kind===k).map(a=>`<div class="acc"><input data-an="${a.id}" value="${esc(a.name)}" aria-label="Nume"><input inputmode="decimal" data-av="${a.id}" value="${a.val}" class="num" aria-label="Valoare"><select data-ap="${a.id}" aria-label="Al cui">${PS.map(p=>`<option value="${p}" ${a.p===p?'selected':''}>${esc(pn(p))}</option>`).join('')}</select><button data-ad="${a.id}" aria-label="Șterge">×</button></div>`).join('')||`<p class="mut">${k==='a'?'Conturi, numerar, economii, investiții.':'Credite, carduri de credit, împrumuturi.'}</p>`}
+  <button class="btn" data-add="${k}">+ ${k==='a'?'Adaugă activ':'Adaugă datorie'}</button></div>`;
+  const A=accs(),a=sum(A.filter(x=>x.kind==='a').map(x=>x.val)),d=sum(A.filter(x=>x.kind==='d').map(x=>x.val));
+  return `<div class="pan"><div class="mut">Avere netă${PF==='all'?' împreună':' · '+esc(pn(PF))}</div><div class="big nw" style="color:${netWorth()<0?'var(--mag)':'inherit'}">${fmt(netWorth())}</div><p class="mut">Active ${fmt(a)} − datorii ${fmt(d)}</p></div>${sec('a','Active')}${sec('d','Datorii')}`};
+let resetArm=false;
+V.setari=()=>{const sy=getSync();return `<div class="pan"><h2>Voi doi</h2>
+  <div class="f"><label for="na">Numele tău</label><input id="na" data-nm="a" value="${esc(C.names.a)}"></div>
+  <div class="f"><label for="nb">Numele partenerului</label><input id="nb" data-nm="b" value="${esc(C.names.b)}"></div>
+  <div class="f"><label>Cine folosește acest telefon</label><div class="seg" id="meSeg">${['a','b'].map(p=>`<button type="button" class="${me===p?'on':''}" data-me="${p}">${esc(pn(p))}</button>`).join('')}</div></div>
+  <p class="note">Tranzacțiile noi sunt puse automat pe numele lui. Cele comune le marchezi cu „Comun”.</p></div>
+  <div class="pan"><h2>Sincronizare între telefoane</h2>${sy?`<p><b>Pornită.</b> ${esc(sync)}</p>
+    <p class="mut">Trimite-i partenerului linkul de mai jos. Îl deschide pe telefonul lui, îl adaugă pe ecran, și vedeți aceleași date.</p>
+    <textarea id="inv" rows="3" readonly>${esc(inviteUrl||mkInvite(sy))}</textarea>
+    <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn pri" id="cpInv">Copiază linkul</button><button class="btn dan" id="syOff">Oprește pe acest telefon</button></div>
+    <p class="note">Oricine are linkul vede bugetul. Trimite-l doar partenerului.</p>`
+  :`<p class="mut">Acum datele sunt doar pe acest telefon. Ca să le vedeți amândoi, lipește aici codul de configurare Firebase (pașii sunt în instrucțiuni), apoi trimite-i partenerului linkul care apare.</p>
+    <textarea id="fbc" rows="5" placeholder="const firebaseConfig = { apiKey: ..., projectId: ..., appId: ... }"></textarea>
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="syOn">Pornește sincronizarea</button></div><p class="note" id="syMsg"></p>`}</div>
+  <div class="pan"><h2>Monedă</h2><select id="cur">${['RON','EUR','USD','GBP'].map(c=>`<option ${C.cur===c?'selected':''}>${c}</option>`).join('')}</select></div>
+  <div class="pan"><h2>Categorii</h2>${['e','i'].map(t=>`<p class="mut">${t==='e'?'Cheltuieli':'Venituri'}</p><div class="chips">${C.cats[t].map(c=>`<span class="chip" style="display:inline-flex;gap:8px;align-items:center"><i class="dot" style="background:${c.col}"></i>${esc(c.name)}${/^alte-/.test(c.id)?'':`<button class="btn ghost" style="min-height:28px;padding:0 4px" data-cd="${t}:${c.id}" aria-label="Șterge ${esc(c.name)}">×</button>`}</span>`).join('')}</div>
+  <div class="row" style="margin:10px 0 16px"><input id="nc-${t}" placeholder="Categorie nouă"><button class="btn" data-ca="${t}">Adaugă</button></div>`).join('')}</div>
+  <div class="pan"><h2>Copie de siguranță</h2><p class="mut">Copiază datele și păstrează-le, sau lipește o copie ca să le restaurezi.</p>
+  <textarea id="io" rows="4" placeholder="Lipește aici datele exportate"></textarea>
+  <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn" id="exp">Copiază datele</button><button class="btn" id="imp">Importă din text</button><label class="btn" style="display:inline-flex;align-items:center">Importă fișier<input type="file" id="impf" accept=".json,.txt" hidden></label></div><p class="note" id="ioMsg"></p></div>
+  <div class="pan"><h2>Șterge tot</h2><p class="mut">${db?'Șterge datele pentru amândoi.':'Șterge datele de pe acest telefon.'}</p><button class="btn dan" id="reset">${resetArm?'Apasă din nou ca să ștergi definitiv':'Șterge toate datele'}</button></div>`};
+
+function render(){header();document.querySelectorAll('.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.v===view));
+  const ae=document.activeElement,fid=ae&&ae.id&&$('view').contains(ae)&&ae.tagName==='INPUT'&&ae.type!=='file'?ae.id:null;
+  if(fid&&fid!=='q')return;
+  $('view').innerHTML=V[view]();
+  if(fid==='q'){const i=$('q');i.focus();i.setSelectionRange(i.value.length,i.value.length)}}
+function route(){const h=location.hash.slice(1);view=V[h]?h:'tranzactii';resetArm=false;$('view').innerHTML='';render()}
+window.addEventListener('hashchange',route);
+$('prev').onclick=()=>{M=shift(M,-1);subTx();render()};$('next').onclick=()=>{M=shift(M,1);subTx();render()};
+
+/* ---- add / edit sheet ---- */
+let ed=null,fT='e',fC='',fP='a';
+function sheet(){$('fCats').innerHTML=C.cats[fT].map(c=>`<button type="button" class="chip ${fC===c.id?'on':''}" data-c="${c.id}">${esc(c.name)}</button>`).join('');
+  document.querySelectorAll('#fType button').forEach(b=>b.classList.toggle('on',b.dataset.t===fT));
+  $('fWho').innerHTML=PS.map(p=>`<button type="button" class="${fP===p?'on':''}" data-p="${p}">${esc(pn(p))}</button>`).join('')}
+function open(t){ed=t||null;fT=t?t.t:'e';fC=t?t.c:C.cats.e[0].id;fP=t?t.p:(PF==='all'?me:PF);
+  $('fTitle').textContent=t?'Editează tranzacția':'Tranzacție nouă';$('fAmt').value=t?String(t.a).replace('.',','):'';
+  const d=today();$('fDate').value=t?t.d:(M===d.slice(0,7)?d:M+'-01');$('fNote').value=t?t.n:'';$('fDel').style.visibility=t?'visible':'hidden';$('fErr').textContent='';
+  sheet();$('ov').classList.add('show');setTimeout(()=>$('fAmt').focus(),60)}
+const close=()=>{$('ov').classList.remove('show');render()};
+$('fab').onclick=()=>open();$('fClose').onclick=close;
+$('ov').addEventListener('click',e=>{if(e.target.id==='ov')close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('ov').classList.contains('show'))close()});
+$('fType').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fT=b.dataset.t;fC=C.cats[fT][0].id;sheet()});
+$('fWho').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b){fP=b.dataset.p;sheet()}});
+$('fCats').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b){fC=b.dataset.c;sheet()}});
+$('form').addEventListener('submit',e=>{e.preventDefault();const a=parseNum($('fAmt').value);
+  if(!(a>0)){$('fErr').textContent='Scrie o sumă mai mare ca zero.';return}
+  const d=$('fDate').value||today();const o={id:ed?ed.id:uid(),t:fT,a:Math.round(a*100)/100,c:fC,d,n:$('fNote').value.trim(),p:fP,ts:ed?ed.ts:Date.now()};
+  if(ed&&ed.ex)o.ex=1;M=d.slice(0,7);subTx();$('ov').classList.remove('show');putTx(o)});
+let last=null,tt=0;
+function toast(msg,undo){last=undo;$('tMsg').textContent=msg;$('tUndo').style.display=undo?'':'none';$('toast').classList.add('show');clearTimeout(tt);tt=setTimeout(()=>$('toast').classList.remove('show'),5000)}
+$('tUndo').onclick=()=>{if(last){last();last=null}$('toast').classList.remove('show')};
+$('fDel').onclick=()=>{const t=ed;$('ov').classList.remove('show');delTx(t.id);toast('Tranzacție ștearsă',()=>putTx(Object.assign({},t)))};
+
+/* ---- bulk actions ---- */
+async function bulk(msg,fn){if(busy)return;busy=true;toast(msg);try{await fn()}catch(e){fail(e)}busy=false;$('toast').classList.remove('show');render()}
+async function addMany(list){for(const t of list){fix(t);TX.set(t.id,t);if(db)await txRef(t.id).set(clean(t))}saveLocal()}
+async function delMany(list){for(const t of list){TX.delete(t.id);if(db)await txRef(t.id).delete()}saveLocal()}
+function imp(txt){let o;try{o=JSON.parse(txt);if(!o||!(Array.isArray(o.tx)))throw 0}catch(e){const m=$('ioMsg');if(m)m.textContent='Textul nu e o copie validă a datelor.';return}
+  const cfg=normCfg(o.cfg||o);
+  bulk('Se importă…',async()=>{C=cfg;saveCfg();await addMany(o.tx.map(t=>Object.assign({p:'a'},t,{id:t.id||uid()})));toast('Date importate')})}
+function sample(){const cur=today().slice(0,7);const r=(a,b)=>Math.round((a+Math.random()*(b-a))*100)/100;const tx=[];
+  for(let k=-2;k<=0;k++){const m=shift(cur,k);const lim=k===0?Number(today().slice(8)):28;const dd=n=>m+'-'+pad(Math.min(n,lim));
+    tx.push({t:'i',c:'salariu',a:5200,d:dd(1),n:'Salariu',p:'a'},{t:'i',c:'salariu',a:4300,d:dd(1),n:'Salariu',p:'b'},{t:'e',c:'locuinta',a:2400,d:dd(2),n:'Chirie',p:'c'},{t:'e',c:'facturi',a:r(320,460),d:dd(5),n:'Curent, gaz, internet',p:'c'});
+    const it=[['mancare','Supermarket','c'],['mancare','Piață','c'],['mancare','Cafenea','a'],['transport','Benzină','a'],['cumparaturi','Haine','b'],['distractie','Cinema','c'],['sanatate','Farmacie','b'],['mancare','Restaurant','c'],['transport','Abonament','b'],['cumparaturi','Cosmetice','b']];
+    it.forEach(([c,n,p],i)=>tx.push({t:'e',c,a:r(25,260),d:dd(3+i*2),n,p}))}
+  const list=tx.filter(t=>t.d<=today()).map(t=>Object.assign(t,{id:uid(),ts:Date.now(),ex:1}));
+  if(!C.acc.length)C.acc=[{id:uid(),name:'Cont curent',val:3400,kind:'a',p:'a'},{id:uid(),name:'Cont curent',val:2100,kind:'a',p:'b'},{id:uid(),name:'Economii comune',val:15000,kind:'a',p:'c'},{id:uid(),name:'Card de credit',val:850,kind:'d',p:'a'}];
+  if(!Object.keys(C.bud).length)C.bud={mancare:1500,transport:500,distractie:400,cumparaturi:600};
+  bulk('Se adaugă datele de exemplu…',async()=>{saveCfg();await addMany(list)})}
+
+/* ---- view events (delegated) ---- */
+const VW=$('view');
+VW.addEventListener('click',e=>{const el=e.target.closest('button');if(!el)return;
+  if(el.dataset.id){open(TX.get(el.dataset.id));return}
+  if('fc' in el.dataset){fCat=el.dataset.fc;render();return}
+  if(el.dataset.me){me=el.dataset.me;try{localStorage.setItem(MEK,me)}catch(x){}render();return}
+  if(el.id==='syOn'){const cfg=parseCfg($('fbc').value);if(!cfg){$('syMsg').textContent='Nu găsesc apiKey, projectId și appId în textul lipit. Copiază tot blocul firebaseConfig.';return}
+    try{localStorage.setItem(SYK,JSON.stringify({cfg,h:code()}))}catch(x){$('syMsg').textContent='Telefonul nu permite salvarea setărilor.';return}
+    bulk('Se pornește sincronizarea…',()=>initSync(true));return}
+  if(el.id==='cpInv'){const t=$('inv');navigator.clipboard.writeText(t.value).then(()=>toast('Link copiat'),()=>{t.select();toast('Selectează linkul și copiază-l')});return}
+  if(el.id==='syOff'){try{localStorage.removeItem(SYK)}catch(x){}location.reload();return}
+  if(el.id==='sample'){sample();return}
+  if(el.id==='clrSample'){bulk('Se șterg datele de exemplu…',async()=>{const all=await allTx();await delMany(all.filter(t=>t.ex))});return}
+  if(el.dataset.add){C.acc.push({id:uid(),name:el.dataset.add==='a'?'Cont nou':'Datorie nouă',val:0,kind:el.dataset.add,p:PF==='all'?me:PF});saveCfg();return}
+  if(el.dataset.ad){const a=C.acc.find(x=>x.id===el.dataset.ad);const k=C.acc.indexOf(a);C.acc.splice(k,1);saveCfg();toast('Șters',()=>{C.acc.splice(k,0,a);saveCfg()});return}
+  if(el.dataset.ca){const t=el.dataset.ca,n=$('nc-'+t).value.trim();if(!n)return;C.cats[t].splice(C.cats[t].length-1,0,{id:uid(),name:n,col:COLS[C.cats[t].length%COLS.length]});saveCfg();return}
+  if(el.dataset.cd){const [t,id]=el.dataset.cd.split(':');const c=C.cats[t].find(x=>x.id===id);const k=C.cats[t].indexOf(c);C.cats[t].splice(k,1);saveCfg();toast(`„${c.name}” ștearsă; tranzacțiile ei apar la Altele`,()=>{C.cats[t].splice(k,0,c);saveCfg()});return}
+  if(el.id==='exp'){const m=$('ioMsg');m.textContent='Se pregătesc datele…';allTx().then(all=>{const s=JSON.stringify({cfg:C,tx:all.map(t=>Object.assign(clean(t),{id:t.id}))});$('io').value=s;
+    navigator.clipboard.writeText(s).then(()=>m.textContent=`Copiat (${all.length} tranzacții). Lipește-l într-o notiță sau într-un email către tine.`,()=>{$('io').select();m.textContent='Datele sunt în căsuța de mai sus: selectează-le și copiază-le.'})},er=>fail(er));return}
+  if(el.id==='imp'){imp($('io').value);return}
+  if(el.id==='reset'){if(!resetArm){resetArm=true;render();return}resetArm=false;
+    bulk('Se șterg datele…',async()=>{for(;;){const all=await allTx();if(!all.length)break;await delMany(all);if(!db)break}const n=C.names;C=blankCfg();C.names=n;saveCfg()});return}
+});
+VW.addEventListener('change',e=>{const el=e.target;
+  if(el.id==='cur'){C.cur=el.value;saveCfg()}
+  else if(el.id==='impf'&&el.files[0]){el.files[0].text().then(imp)}
+  else if(el.dataset.nm){C.names[el.dataset.nm]=el.value.trim()||(el.dataset.nm==='a'?'Eu':'Partener');saveCfg()}
+  else if(el.dataset.bud){const n=parseNum(el.value);if(n>0)C.bud[el.dataset.bud]=Math.round(n*100)/100;else delete C.bud[el.dataset.bud];saveCfg()}
+  else if(el.dataset.an){C.acc.find(a=>a.id===el.dataset.an).name=el.value.trim()||'Fără nume';saveCfg()}
+  else if(el.dataset.av){const n=parseNum(el.value);C.acc.find(a=>a.id===el.dataset.av).val=isFinite(n)?Math.abs(n):0;saveCfg()}
+  else if(el.dataset.ap){C.acc.find(a=>a.id===el.dataset.ap).p=el.value;saveCfg()}
+});
+VW.addEventListener('input',e=>{if(e.target.id==='q'){q=e.target.value;$('view').innerHTML=V[view]();const i=$('q');i.focus();i.setSelectionRange(i.value.length,i.value.length)}});
+VW.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(!(a&&VW.contains(a)&&a.tagName==='INPUT'))render()},0));
+
+route();
+initSync(false);
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
