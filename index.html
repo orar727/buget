@@ -186,6 +186,7 @@ const netWorth=()=>sum(accs().map(a=>a.kind==='d'?-a.val:a.val));
 
 /* ---- persistence: this phone, plus optional Firebase sync for the couple ---- */
 const SYK='buget-sync';
+const FB={apiKey:"AIzaSyCZKJtrjyJSN-87PPuS86SD3HD2iEH8_WI",authDomain:"buget-64df0.firebaseapp.com",projectId:"buget-64df0",storageBucket:"buget-64df0.firebasestorage.app",messagingSenderId:"64276150219",appId:"1:64276150219:web:b791befb4bbd71973aa84e"};
 let db=null,txUnsub=null,winKey='',cfgT=0,cfgDirty=false,cfgWriting=false,cfgAgain=false,sync='Datele sunt doar pe acest telefon',inviteUrl='';
 const getSync=()=>{try{return JSON.parse(localStorage.getItem(SYK)||'null')}catch(e){return null}};
 const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -305,8 +306,7 @@ V.setari=()=>{const sy=getSync();return `<div class="pan"><h2>Voi doi</h2>
     <textarea id="inv" rows="3" readonly>${esc(inviteUrl||mkInvite(sy))}</textarea>
     <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn pri" id="cpInv">Copiază linkul</button><button class="btn dan" id="syOff">Oprește pe acest telefon</button></div>
     <p class="note">Oricine are linkul vede bugetul. Trimite-l doar partenerului.</p>`
-  :`<p class="mut">Acum datele sunt doar pe acest telefon. Ca să le vedeți amândoi, lipește aici codul de configurare Firebase (pașii sunt în instrucțiuni), apoi trimite-i partenerului linkul care apare.</p>
-    <textarea id="fbc" rows="5" placeholder="const firebaseConfig = { apiKey: ..., projectId: ..., appId: ... }"></textarea>
+  :`<p class="mut">Acum datele sunt doar pe acest telefon. Apasă butonul de mai jos pe telefonul tău, apoi trimite-i partenerului linkul care apare. Ce ai introdus deja se urcă automat.</p>
     <div class="row" style="margin-top:10px"><button class="btn pri" id="syOn">Pornește sincronizarea</button></div><p class="note" id="syMsg"></p>`}</div>
   <div class="pan"><h2>Monedă</h2><select id="cur">${['RON','EUR','USD','GBP'].map(c=>`<option ${C.cur===c?'selected':''}>${c}</option>`).join('')}</select></div>
   <div class="pan"><h2>Categorii</h2>${['e','i'].map(t=>`<p class="mut">${t==='e'?'Cheltuieli':'Venituri'}</p><div class="chips">${C.cats[t].map(c=>`<span class="chip" style="display:inline-flex;gap:8px;align-items:center"><i class="dot" style="background:${c.col}"></i>${esc(c.name)}${/^alte-/.test(c.id)?'':`<button class="btn ghost" style="min-height:28px;padding:0 4px" data-cd="${t}:${c.id}" aria-label="Șterge ${esc(c.name)}">×</button>`}</span>`).join('')}</div>
@@ -373,7 +373,7 @@ VW.addEventListener('click',e=>{const el=e.target.closest('button');if(!el)retur
   if(el.dataset.id){open(TX.get(el.dataset.id));return}
   if('fc' in el.dataset){fCat=el.dataset.fc;render();return}
   if(el.dataset.me){me=el.dataset.me;try{localStorage.setItem(MEK,me)}catch(x){}render();return}
-  if(el.id==='syOn'){const cfg=parseCfg($('fbc').value);if(!cfg){$('syMsg').textContent='Nu găsesc apiKey, projectId și appId în textul lipit. Copiază tot blocul firebaseConfig.';return}
+  if(el.id==='syOn'){const cfg=FB;if(!cfg){$('syMsg').textContent='Nu găsesc apiKey, projectId și appId în textul lipit. Copiază tot blocul firebaseConfig.';return}
     try{localStorage.setItem(SYK,JSON.stringify({cfg,h:code()}))}catch(x){$('syMsg').textContent='Telefonul nu permite salvarea setărilor.';return}
     bulk('Se pornește sincronizarea…',()=>initSync(true));return}
   if(el.id==='cpInv'){const t=$('inv');navigator.clipboard.writeText(t.value).then(()=>toast('Link copiat'),()=>{t.select();toast('Selectează linkul și copiază-l')});return}
